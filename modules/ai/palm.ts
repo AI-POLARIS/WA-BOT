@@ -2,7 +2,7 @@ import { GoogleAuth } from "google-auth-library";
 import { v1beta2 as palm } from "@google-ai/generativelanguage";
 import Console from "../../utils/console";
 
-const GCP_API_KEY = process.env.GCP_API_KEY || "AIzaSyDHh_AhrcU7bWmDQrObNsyfJ3KoDbh5iEE";
+const GCP_API_KEY = process.env.GCP_API_KEY || "";
 
 /**
  * @description Create a new instance of the Google Auth Client

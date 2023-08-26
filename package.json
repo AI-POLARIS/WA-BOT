@@ -43,5 +43,8 @@
     "ignore": [
       "store.json"
     ]
+  },
+  "engines": {
+    "node": ">=14.20.1"
   }
 }
