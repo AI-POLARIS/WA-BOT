@@ -50,7 +50,15 @@ const Config = {
         usePairingCode: false,
     },
 
-    COMMAND_PREFIXS: process.env.COMMAND_PREFIXS || ["!"],
+    /**
+     * Global Config
+     */
+    BOT_NAME: process.env.BOT_NAME || "Polaris AI Inc.",
+    ADMINS: process.env.ADMINS?.split(",") || [
+        "918100458657@s.whatsapp.net",
+    ],
+    OWNER: process.env.OWNER || "POLARIS Inc.",
+    COMMAND_PREFIXS: process.env.COMMAND_PREFIXS?.split(", ") || ["!", "/", "-"],
 
     /**
      * Functions

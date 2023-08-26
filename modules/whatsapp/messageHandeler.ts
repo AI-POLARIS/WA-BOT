@@ -1,9 +1,8 @@
-import { WASocket } from "@whiskeysockets/baileys";
 import Console from "../../utils/console";
 import { DEFAULT_CONTEXT, EXAMPLE_MESSAGES } from "../ai/bot-config";
 import { discussClient } from "../ai/palm";
 import { SerializedMessage } from "./serializeMessage";
-import { isCommand } from "./commandHandeler";
+import { getCommand, isCommand } from "./commandHandeler";
 
 
 export default async function HandleMessage(message: SerializedMessage, sock: any) {
@@ -20,11 +19,6 @@ export default async function HandleMessage(message: SerializedMessage, sock: an
         return;
     }
 
-    if (isCommand(message.body)) {
-        Console.warn("Commands are not supported yet!");
-        return;
-    }
-
     if (message.body === undefined || message.body === null || message.body === "") {
         Console.warn("Empty message!");
         sock.doReact(message.from, message.key, "❌");
@@ -33,11 +27,15 @@ export default async function HandleMessage(message: SerializedMessage, sock: an
 
     sock.doReact(message.from, message.key, "⏳");
 
+    if (isCommand(message.body)) {
+        return getCommand(message, sock);
+    }
+
     /**
      * @description If no prefix is matched, return answer from AI
      * Also load previous messages
      */
-    const previousMessages = await sock.getMessages(message.from, 20, message.id);
+    const previousMessages = await sock.getMessages(message.from, 10, message.id);
 
     const messages = previousMessages.map((message: SerializedMessage) => {
         return {

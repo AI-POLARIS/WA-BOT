@@ -4,3 +4,5 @@
 **/.env.*
 
 **/store.json
+
+yarn-error.log

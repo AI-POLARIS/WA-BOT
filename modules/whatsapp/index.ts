@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import FileType from "file-type";
 import makeWASocket, { Browsers, DisconnectReason, WASocket, downloadContentFromMessage, fetchLatestBaileysVersion, makeInMemoryStore, proto } from "@whiskeysockets/baileys";
 import Auth from "../../db";
 import chalk from "chalk";
@@ -8,7 +11,20 @@ import { serialize } from "./serializeMessage";
 import Console from "../../utils/console";
 import Config from "../../config";
 import HandleMessage from "./messageHandeler";
+import { getBuffer } from "../../utils/Functions2";
+import { Template } from "./templates";
+import { durationFormatter, sizeFormatter } from "human-readable";
+import pidusage from "pidusage";
 
+// declare module "@whiskeysockets/baileys" {
+//     interface WASocket extends WASocket {
+//         setStatus: (status: string) => void,
+//         downloadMediaMessage: (message: any) => Promise<Buffer>,
+//         sendText: (jid: string, text: string, quoted: any, options: any) => void,
+//         doReact: (jid: string, key: string, reaction: string) => void,
+//         getMessages: (jid: string, limit?: number, messageId?: string) => Promise<proto.IMessage[]>,
+//     }
+// }
 
 const store = makeInMemoryStore({
     logger: pino().child({
@@ -42,6 +58,7 @@ export default async function startWA() {
         auth: state,
         generateHighQualityLinkPreview: true,
         markOnlineOnConnect: true,
+        syncFullHistory: true,
     });
 
     /**
@@ -117,6 +134,59 @@ export default async function startWA() {
                 Console.info('Opened connection');
                 Console.info("New Login: ", isNewLogin ? chalk.greenBright("Yes") : chalk.redBright("No"));
                 Console.info("Received Pending Notifications: ", receivedPendingNotifications ? chalk.greenBright("Yes") : chalk.redBright("No"));
+
+                /**
+                 * Send a message to all admins
+                 */
+                const osInfo = Config.getOSInfo();
+                const format = sizeFormatter({
+                    std: 'JEDEC', // 'SI' (default) | 'IEC' | 'JEDEC'
+                    decimalPlaces: 2,
+                    keepTrailingZeroes: false,
+                    render: (literal, symbol) => `${literal} ${symbol}B`,
+                })
+                const timeFormat = durationFormatter<string>({
+                    allowMultiples: ['d', 'h', 'm', 's'],
+                    keepNonLeadingZeroes: false,
+                });
+                pidusage(process.pid, function (err, stats) {
+                    const text = Template("server_start", {
+                        args: {
+                            botName: Config.BOT_NAME,
+                            prefix: Config.COMMAND_PREFIXS.join(", "),
+                            ownerName: Config.OWNER,
+                            totalUser: "23",
+                            totalGroup: "32",
+                            
+                            // Memory
+                            totalMemory: format(osInfo.find((info) => info.method === "totalmem")?.value),
+                            freeMemory: format(osInfo.find((info) => info.method === "freemem")?.value),
+                            usedMemory: format(osInfo.find((info) => info.method === "totalmem")?.value - osInfo.find((info) => info.method === "freemem")?.value),
+                            pidMemory: format(stats.memory),
+                            activeMemory: format(process.memoryUsage().rss),
+
+                            // CPU
+                            platform: osInfo.find((info) => info.method === "platform")?.value,
+                            version: osInfo.find((info) => info.method === "version")?.value,
+                            release: osInfo.find((info) => info.method === "release")?.value,
+                            machine: osInfo.find((info) => info.method === "machine")?.value,
+                            cpu: `${stats.cpu.toFixed(2)}%`,
+                            speed: process.cpuUsage().system.toString(),
+                            handler: process.cpuUsage().system.toString(),
+                            uptime: timeFormat(osInfo.find((info) => info.method === "uptime")?.value * 1000),
+                            runtime: timeFormat(stats.elapsed),
+
+                            // Time
+                            time: new Date().toLocaleTimeString(),
+                            date: new Date().toLocaleDateString(),
+                        }
+                    });
+                    Config.ADMINS.forEach(async (admin) => {
+                        await sock.sendMessage(admin, {
+                            text: text ? text : "Hello, I'm online now!",
+                        }, {});
+                    });
+                });
             }
 
             return;
@@ -139,7 +209,9 @@ export default async function startWA() {
                 const secs = Math.floor(seconds % 60);
                 return (`${pad(hours)}:${pad(minutes)}:${pad(secs)}`);
             };
-            sock.updateProfileStatus(`Server uptime: ${formatTime(process.uptime())}s`);
+            // sock.updateProfileStatus(`Server uptime: ${formatTime(process.uptime())}s`);
+            // @ts-ignore
+            sock.setStatus(`Server uptime: ${formatTime(process.uptime())}s`);
 
             await HandleMessage(m, sock);
             return;
@@ -194,7 +266,7 @@ export default async function startWA() {
         );
 
     // @ts-ignore
-    sock.doReact = (jid: string, key, reaction: string) => 
+    sock.doReact = (jid: string, key, reaction: string) =>
         sock.sendMessage(
             jid,
             {
@@ -222,4 +294,81 @@ export default async function startWA() {
 
         return proto.Message.fromObject({});
     }
+
+    // @ts-ignore
+    // sock.getFile = async (PATH, save) => {
+    //     let res;
+    //     let data = Buffer.isBuffer(PATH)
+    //         ? PATH
+    //         : /^data:.*?\/.*?;base64,/i.test(PATH)
+    //             ? Buffer.from(PATH.split`,`[1], "base64")
+    //             : /^https?:\/\//.test(PATH)
+    //                 ? await (res = await getBuffer(PATH))
+    //                 : fs.existsSync(PATH)
+    //                     ? ((filename = PATH), fs.readFileSync(PATH))
+    //                     : typeof PATH === "string"
+    //                         ? PATH
+    //                         : Buffer.alloc(0);
+
+    //     let type = (await FileType.fromBuffer(data)) || {
+    //         mime: "application/octet-stream",
+    //         ext: ".bin",
+    //     };
+    //     filename = path.join(
+    //         __filename,
+    //         "../src/" + new Date() * 1 + "." + type.ext
+    //     );
+    //     if (data && save) fs.promises.writeFile(filename, data);
+    //     return {
+    //         res,
+    //         filename,
+    //         size: await getSizeMedia(data),
+    //         ...type,
+    //         data,
+    //     };
+    // };
+
+    // @ts-ignore
+    // sock.sendFile = async (jid, PATH, fileName, quoted = {}, options = {}) => {
+    //     let types = await sock.getFile(PATH, true);
+    //     let { filename, size, ext, mime, data } = types;
+    //     let type = "",
+    //         mimetype = mime,
+    //         pathFile = filename;
+    //     if (options.asDocument) type = "document";
+    //     if (options.asSticker || /webp/.test(mime)) {
+    //         let { writeExif } = require("./lib/sticker.js");
+    //         let media = {
+    //             mimetype: mime,
+    //             data,
+    //         };
+    //         pathFile = await writeExif(media, {
+    //             packname: global.packname,
+    //             author: global.packname,
+    //             categories: options.categories ? options.categories : [],
+    //         });
+    //         await fs.promises.unlink(filename);
+    //         type = "sticker";
+    //         mimetype = "image/webp";
+    //     } else if (/image/.test(mime)) type = "image";
+    //     else if (/video/.test(mime)) type = "video";
+    //     else if (/audio/.test(mime)) type = "audio";
+    //     else type = "document";
+    //     await sock.sendMessage(
+    //         jid,
+    //         {
+    //             [type]: {
+    //                 url: pathFile,
+    //             },
+    //             mimetype,
+    //             fileName,
+    //             ...options,
+    //         },
+    //         {
+    //             quoted,
+    //             ...options,
+    //         }
+    //     );
+    //     return fs.promises.unlink(pathFile);
+    // };
 }

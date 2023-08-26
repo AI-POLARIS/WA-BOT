@@ -1,0 +1,38 @@
+╭────《 🤖 𝐏𝐎𝐋𝐀𝐑𝐈𝐒 𝐁𝐎𝐓 》─────⊷
+│─────────────────────────⊷
+│  ✭  ```BOT: {{botName}}```
+│  ✭  ```PREFIX: [ {{prefix}} ]```
+│  ✭  ```OWNER: {{ownerName}}```
+│
+│────《 ⚡ 𝐒𝐓𝐀𝐓𝐔𝐒 》─────────⊷
+│  │  ✭  ```TOTAL USER: {{totalUser}}```
+│  │  ✭  ```TOTAL GROUP: {{totalGroup}}```
+│  ╰──────────────⊷
+│
+│────《 💾 𝐌𝐄𝐌𝐎𝐑𝐘 》─────────⊷
+│  │  ✭  ```TOTAL MEMORY: {{totalMemory}}```
+│  │  ✭  ```USED MEMORY: {{usedMemory}}```
+│  │  ✭  ```PID MEMORY: {{pidMemory}}```
+│  │  ✭  ```FREE MEMORY: {{freeMemory}}```
+│  │  ✭  ```ACTIVE MEMORY: {{activeMemory}}```
+│  ╰──────────────⊷
+│
+│────《 🖥 𝐒𝐘𝐒𝐓𝐄𝐌 》─────────⊷
+│  │  ✭  ```PLATFORM: {{platform}}```
+│  │  ✭  ```VERSION: {{version}}```
+│  │  ✭  ```RELEASE: {{release}}```
+│  │  ✭  ```MACHINE: {{machine}}```
+│  │  ✭  ```CPU Usages: {{cpu}}```
+│  │  ✭  ```SPEED: {{speed}}```
+│  │  ✭  ```HANDLER: {{handler}}```
+│  │  ✭  ```UPTIME: {{uptime}}```
+│  │  ✭  ```RUNTIME: {{runtime}}```
+│  ╰──────────────⊷
+│
+│────《 ⏳ 𝐓𝐈𝐌𝐄 》─────────⊷
+│  │  ✭  ```TIME: {{time}}```
+│  │  ✭  ```DATE: {{date}}```
+│  ╰──────────────⊷
+│
+│─────────────────────────⊷
+╰────《 🤖 𝐏𝐎𝐋𝐀𝐑𝐈𝐒 𝐁𝐎𝐓 》─────⊷
