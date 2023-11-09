@@ -6,6 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
+    "copyFiles": "copyfiles --error --up 1 modules/whatsapp/templates/*.txt build/modules",
+    "postbuild": "yarn run copyFiles",
     "start": "node --max-old-space-size=4096 build/index.js",
     "dev": "nodemon --exec ts-node index.ts"
   },
@@ -41,6 +43,7 @@
     "@types/pidusage": "^2.0.2",
     "@types/qrcode": "^1.5.1",
     "@types/qrcode-terminal": "^0.12.0",
+    "copyfiles": "^2.4.1",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "tsc": "^2.0.4",
