@@ -11,7 +11,7 @@ export function Template(format: string, options: {
      * Get the template
      */
     try {
-        const template = fs.readFileSync(path.join(__dirname, `${format}.txt`), "utf-8");
+        const template = fs.readFileSync(path.resolve(__dirname, `${format}.txt`), "utf-8");
 
         /**
          * Replace the args
