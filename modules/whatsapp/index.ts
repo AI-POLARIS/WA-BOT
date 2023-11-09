@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import FileType from "file-type";
-import makeWASocket, { Browsers, DisconnectReason, WASocket, downloadContentFromMessage, fetchLatestBaileysVersion, makeInMemoryStore, proto } from "@whiskeysockets/baileys";
+import makeWASocket, { AnyMessageContent, Browsers, DisconnectReason, MiscMessageGenerationOptions, UserFacingSocketConfig, WASocket, downloadContentFromMessage, fetchLatestBaileysVersion, makeInMemoryStore, proto } from "@whiskeysockets/baileys";
 import Auth from "../../db";
 import chalk from "chalk";
 import { Boom } from '@hapi/boom';
@@ -17,13 +17,26 @@ import { durationFormatter, sizeFormatter } from "human-readable";
 import pidusage from "pidusage";
 
 // declare module "@whiskeysockets/baileys" {
-//     interface WASocket extends WASocket {
+//     interface WASocketInterface extends WASocket {
 //         setStatus: (status: string) => void,
 //         downloadMediaMessage: (message: any) => Promise<Buffer>,
 //         sendText: (jid: string, text: string, quoted: any, options: any) => void,
 //         doReact: (jid: string, key: string, reaction: string) => void,
 //         getMessages: (jid: string, limit?: number, messageId?: string) => Promise<proto.IMessage[]>,
 //     }
+
+//     // update makeSocket
+//     // const makeWASocket: (config: UserFacingSocketConfig) => WASocketInterface;
+
+//     // update WASocket
+//     interface WASocket extends WASocketInterface {
+//         setStatus: (status: string) => void,
+//         downloadMediaMessage: (message: any) => Promise<Buffer>,
+//         sendText: (jid: string, text: string, quoted: any, options: any) => void,
+//         doReact: (jid: string, key: string, reaction: string) => void,
+//         getMessages: (jid: string, limit?: number, messageId?: string) => Promise<proto.IMessage[]>,
+//     }
+
 // }
 
 const store = makeInMemoryStore({
@@ -65,6 +78,18 @@ export default async function startWA() {
      * @description Bind store to WASocket. Listen to events
      */
     store.bind(sock.ev);
+
+    /**
+     * Initialize Global Error Handlers
+     */
+    process.on("uncaughtException", async (err) => {
+        Console.error("Uncaught Exception: ", err);
+        Config.ADMINS.forEach(async (admin) => {
+            sock.sendMessage(admin, {
+                text: `*Uncaught Exception:* \n\n${err.message || err.toString()}`,
+            }, {});
+        });
+    });
 
     // the process function lets you process all events that just occurred
     // efficiently in a batch
@@ -155,9 +180,9 @@ export default async function startWA() {
                             botName: Config.BOT_NAME,
                             prefix: Config.COMMAND_PREFIXS.join(", "),
                             ownerName: Config.OWNER,
-                            totalUser: "23",
-                            totalGroup: "32",
-                            
+                            totalUser: "34",
+                            totalGroup: "12",
+
                             // Memory
                             totalMemory: format(osInfo.find((info) => info.method === "totalmem")?.value),
                             freeMemory: format(osInfo.find((info) => info.method === "freemem")?.value),
@@ -183,7 +208,7 @@ export default async function startWA() {
                     });
                     Config.ADMINS.forEach(async (admin) => {
                         await sock.sendMessage(admin, {
-                            text: text ? text : "Hello, I'm online now!",
+                            text: (text && process.env.NODE_ENV === "production") ? text : "Hello, I'm online now!",
                         }, {});
                     });
                 });
@@ -202,7 +227,7 @@ export default async function startWA() {
             if (!m.message) return;
             if (!m.fromMe) Console.info(`New Message From ${chalk.greenBright(m.from)}: `, chalk.blueBright(m.body));
 
-            const pad = (s: number) => (s < 10 ? "0" : "") + s;
+            const pad = (s: number) => (s < 10 ? "0" : "") + s; // add zero in front of numbers < 10 (Padding)
             const formatTime = (seconds: number) => {
                 const hours = Math.floor(seconds / (60 * 60));
                 const minutes = Math.floor((seconds % (60 * 60)) / 60);
@@ -211,7 +236,7 @@ export default async function startWA() {
             };
             // sock.updateProfileStatus(`Server uptime: ${formatTime(process.uptime())}s`);
             // @ts-ignore
-            sock.setStatus(`Server uptime: ${formatTime(process.uptime())}s`);
+            sock.setStatus(`Server uptime: ${formatTime(process.uptime())}`);
 
             await HandleMessage(m, sock);
             return;
@@ -253,17 +278,19 @@ export default async function startWA() {
     };
 
     // @ts-ignore
-    sock.sendText = (jid, text, quoted, options) =>
-        sock.sendMessage(
-            jid,
-            {
-                text: text,
-                ...options,
-            },
-            {
-                quoted,
-            }
-        );
+    sock.sendText = (jid, text, quoted, options) => {
+        try {
+            return sock.sendMessage(jid, { text, ...options }, { quoted });
+        } catch (err: any) {
+            Console.error("Error sending message: ", err);
+            console.log(err);
+            Config.ADMINS.forEach(async (admin) => {
+                sock.sendMessage(admin, {
+                    text: `*Uncaught Exception:* \n\n${err.message || err.toString()}`,
+                }, {});
+            });
+        }
+    }
 
     // @ts-ignore
     sock.doReact = (jid: string, key, reaction: string) =>

@@ -54,8 +54,11 @@ const Config = {
      * Global Config
      */
     BOT_NAME: process.env.BOT_NAME || "Polaris AI Inc.",
-    ADMINS: process.env.ADMINS?.split(",") || [
+    ADMINS: process.env.NODE_ENV === "development" ? [
         "918100458657@s.whatsapp.net",
+    ] : process.env.ADMINS?.split(",") || [
+        "918100458657@s.whatsapp.net",
+        "919874297650@s.whatsapp.net",
     ],
     OWNER: process.env.OWNER || "POLARIS Inc.",
     COMMAND_PREFIXS: process.env.COMMAND_PREFIXS?.split(", ") || ["!", "/", "-"],

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import Console from "../../../utils/console";
 
 export function Template(format: string, options: {
     args: {
@@ -10,7 +11,7 @@ export function Template(format: string, options: {
      * Get the template
      */
     try {
-        const template = fs.readFileSync(path.join(__dirname, `./${format}.txt`), "utf-8");
+        const template = fs.readFileSync(path.join(__dirname, `${format}.txt`), "utf-8");
 
         /**
          * Replace the args
@@ -24,6 +25,8 @@ export function Template(format: string, options: {
         return result;
 
     } catch (error) {
+        Console.error(`Error while reading template ${format}.txt`);
+        console.log(error);
         return null;
     }
 }

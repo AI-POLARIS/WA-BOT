@@ -3,6 +3,7 @@ import { DEFAULT_CONTEXT, EXAMPLE_MESSAGES } from "../ai/bot-config";
 import { discussClient } from "../ai/palm";
 import { SerializedMessage } from "./serializeMessage";
 import { getCommand, isCommand } from "./commandHandeler";
+import Config from "../../config";
 
 
 export default async function HandleMessage(message: SerializedMessage, sock: any) {
@@ -75,10 +76,15 @@ export default async function HandleMessage(message: SerializedMessage, sock: an
             message.reply(`Sorry, I don't know what to say! I'm still learning! Please try again later or try to contact my developer!`);
             return;
         }
-    } catch (error) {
+    } catch (error: any) {
         Console.error(error);
         sock.doReact(message.from, message.key, "❌");
         message.reply(`Sorry, I don't know what to say! I'm still learning! Please try again later or try to contact my developer!`);
+        Config.ADMINS.forEach(async (admin) => {
+            sock.sendMessage(admin, {
+                text: `*Uncaught Exception:* \n\n${error.message || error.toString()}`,
+            }, {});
+        });
         return;
     }
 }

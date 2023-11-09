@@ -12,6 +12,7 @@ export default {
         "admins",
     ],
     description: "Welcome command",
+    isAdminOnly: true,
     execute: async (message, command, args, sock) => {
         switch (command) {
             case "status":
