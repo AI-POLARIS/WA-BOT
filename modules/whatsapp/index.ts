@@ -84,11 +84,6 @@ export default async function startWA() {
      */
     process.on("uncaughtException", async (err) => {
         Console.error("Uncaught Exception: ", err);
-        Config.ADMINS.forEach(async (admin) => {
-            sock.sendMessage(admin, {
-                text: `*Uncaught Exception:* \n\n${err.message || err.toString()}`,
-            }, {});
-        });
     });
 
     // the process function lets you process all events that just occurred
@@ -206,6 +201,8 @@ export default async function startWA() {
                             date: new Date().toLocaleDateString(),
                         }
                     });
+
+                    Console.info("Sending Online Message to Admins...");
                     Config.ADMINS.forEach(async (admin) => {
                         await sock.sendMessage(admin, {
                             text: (text && process.env.NODE_ENV === "production") ? text : "Hello, I'm online now!",
