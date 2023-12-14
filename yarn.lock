@@ -26,6 +26,11 @@
   dependencies:
     google-gax "^4.0.3"
 
+"@google/generative-ai@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@google/generative-ai/-/generative-ai-0.1.1.tgz#ecf0cd832620527f0e35c3aecc17c058d8ba52b8"
+  integrity sha512-cbzKa8mT9YkTrT4XUuENIuvlqiJjwDgcD2Ks4L99Az9dWLgdXn8xnETEAZLOpqzoGx+1PuATZqlUnVRAeLbMgA==
+
 "@grpc/grpc-js@~1.8.0":
   version "1.8.21"
   resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.8.21.tgz#d282b122c71227859bf6c5866f4c40f4a2696513"

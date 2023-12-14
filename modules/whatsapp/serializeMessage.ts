@@ -2,16 +2,19 @@ import {
     proto,
     getContentType,
     jidNormalizedUser,
-    extractMessageContent
+    extractMessageContent,
+    WASocket
 } from "@whiskeysockets/baileys";
 
-export type SerializedMessage = {
+export type SerializedMessage = typeof proto.WebMessageInfo & {
     key: any;
     id: string;
     type: string;
+    to: string;
     from: string;
     fromMe: boolean;
     isGroup: boolean;
+    groupId?: string;
     isBot: boolean;
     sender: string;
     message: any;
@@ -24,16 +27,18 @@ export type SerializedMessage = {
     download: (pathFile: any) => any;
 };
 
-export const serialize = (Sock: any, m: any, options = {}): SerializedMessage => {
+export const serialize = (Sock: WASocket, m: proto.IWebMessageInfo, options = {}): SerializedMessage => {
     if (!m) return m;
     let M = proto.WebMessageInfo;
     const serializeMessage: SerializedMessage = M.fromObject(m) as any;
     if (serializeMessage.key) {
+        serializeMessage.to = jidNormalizedUser(serializeMessage.key.remoteJid);
         serializeMessage.from = jidNormalizedUser(serializeMessage.key.remoteJid || serializeMessage.key.participant);
         serializeMessage.fromMe = serializeMessage.key.fromMe;
         serializeMessage.id = serializeMessage.key.id;
         serializeMessage.isBot = serializeMessage.id.startsWith("BAE5") && serializeMessage.id.length == 16;
         serializeMessage.isGroup = serializeMessage.from.endsWith("@g.us");
+        serializeMessage.groupId = serializeMessage.isGroup ? serializeMessage.from.split("-")[1] : undefined;
         serializeMessage.sender = jidNormalizedUser(
             (serializeMessage.fromMe && Sock.user?.id) || serializeMessage.key.participant || serializeMessage.from || ""
         );
@@ -77,9 +82,11 @@ export const serialize = (Sock: any, m: any, options = {}): SerializedMessage =>
             serializeMessage.quoted.delete = () =>
                 Sock.sendMessage(serializeMessage.quoted.from, { delete: vM.key });
             serializeMessage.quoted.download = (pathFile: any) =>
+                // @ts-ignore
                 Sock.downloadMediaMessage(serializeMessage.quoted.msg, pathFile);
         }
     }
+    // @ts-ignore
     serializeMessage.download = (pathFile: any) => Sock.downloadMediaMessage(serializeMessage.msg, pathFile);
     serializeMessage.body = serializeMessage.text =
         serializeMessage.message?.conversation ||
@@ -91,7 +98,9 @@ export const serialize = (Sock: any, m: any, options = {}): SerializedMessage =>
         "";
     serializeMessage.reply = (text: string, chatId = serializeMessage.from, options = {}) =>
         Buffer.isBuffer(text)
+            // @ts-ignore
             ? Sock.sendFile(chatId, text, "file", "", serializeMessage, { ...options })
+            // @ts-ignore
             : Sock.sendText(chatId, text, serializeMessage, { ...options });
 
     return serializeMessage;

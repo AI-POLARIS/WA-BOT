@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@google-ai/generativelanguage": "^1.0.0",
+    "@google/generative-ai": "^0.1.1",
     "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "^6.4.0",
     "axios": "^1.4.0",
