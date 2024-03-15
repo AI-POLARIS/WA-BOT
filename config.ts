@@ -40,7 +40,7 @@ const Config = {
      */
     PORT: process.env.PORT || 3000,
     NODE_ENV: process.env.NODE_ENV || "development",
-    MONGO_URI: process.env.MONGO_URI || "mongodb+srv://polaris:KS3jLOtqaHNS6ued@cluster0.mmdauwz.mongodb.net/?retryWrites=true&w=majority",
+    MONGO_URI: process.env.MONGO_URI || "",
     SESSION_ID: process.env.SESSION_ID || "default",
 
     /**
